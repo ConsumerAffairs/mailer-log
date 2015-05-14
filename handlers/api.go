@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/ConsumerAffairs/mailer_microservice/models"
+	"github.com/ConsumerAffairs/mailer-log/models"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 	"gopkg.in/mgo.v2"
