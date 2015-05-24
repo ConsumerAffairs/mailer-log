@@ -1,0 +1,67 @@
+<div class="wrapper">
+  <div class="table">
+    <div class="row header blue">
+      <div class="cell">Subject</div>
+      <div class="cell">Sent at</div>
+      <div class="cell">From email</div>
+      <div class="cell">To emails</div>
+      <div class="cell">CC emails</div>
+      <div class="cell">BCC emails</div>
+      <div class="cell">All recipients</div>
+      <div class="cell">Sent</div>
+    </div>
+    <div class="row">
+      <div class="cell">{{ mail.subject }}</div>
+      <div class="cell">{{ mail.sentAt | date:"MM/dd/yyyy 'at' h:mma" }}</div>
+      <div class="cell">{{ mail.fromEmail }}</div>
+      <div class="cell">
+        <ul ng-repeat="email in mail.toEmails">
+          <li>
+            <a href="mailto:{{ email }}" target="_top">{{ email }}</a>
+          </li>
+        </ul>
+      </div>
+      <div class="cell">
+        <ul ng-repeat="email in mail.ccEmails">
+          <li>
+            <a href="mailto:{{ email }}" target="_top">{{ email }}</a>
+          </li>
+        </ul>
+      </div>
+      <div class="cell">
+        <ul ng-repeat="email in mail.bccEmails">
+          <li>
+            <a href="mailto:{{ email }}" target="_top">{{ email }}</a>
+          </li>
+        </ul>
+      </div>
+      <div class="cell">
+        <ul ng-repeat="email in mail.allRecipients">
+          <li>
+            <a href="mailto:{{ email }}" target="_top">{{ email }}</a>
+          </li>
+        </ul>
+      </div>
+      <div class="cell">{{ mail.sent }}</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab">
+      <input type="radio" id="tab-1" name="tab-group-1" checked>
+      <label for="tab-1">Plain Text</label>
+      <div class="content">
+        <pre>{{ mail.bodyText }}</pre>
+      </div>
+    </div>
+    <div class="tab">
+      <input type="radio" id="tab-2" name="tab-group-1">
+      <label for="tab-2">HTML</label>
+      <div class="content">{{ mail.bodyHtml }}</div>
+    </div>
+    <div class="tab">
+      <input type="radio" id="tab-3" name="tab-group-1">
+      <label for="tab-3">Raw</label>
+      <div class="content">{{ mail.raw }}</div>
+    </div>
+  </div>
+</div>

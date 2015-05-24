@@ -23,5 +23,11 @@ _testmain.go
 *.test
 *.prof
 
+*.js
+*.map
+frontend/bower_components/
+frontend/node_modules/
+config.local.json
+
 # Binary
 server
