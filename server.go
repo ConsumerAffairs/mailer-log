@@ -5,7 +5,6 @@ package main
 // TODO: Pagination - http://jsonapi.org/format/#fetching-pagination
 // TODO: Filtering - http://jsonapi.org/recommendations/#filtering
 // TODO: Implement fields type, links and etc.- http://jsonapi.org/format/#document-structure
-// TODO: Config file
 // TODO: Disable LoggingHandler if nto DEBUG
 
 import (
@@ -17,7 +16,8 @@ import (
 	"github.com/justinas/alice"
 	"gopkg.in/mgo.v2"
 	"net/http"
-    "stathat.com/c/jconfig"
+	"os"
+	"stathat.com/c/jconfig"
 )
 
 var (
@@ -25,45 +25,39 @@ var (
 	collection *mgo.Collection
 )
 
-type Config struct {
-    debug       bool
-    host        string
-    mongodb     string
-
-}
-
-
-
-
-func FileServerHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, r.URL.Path[1:])
-}
-
 func main() {
 
-    config := jconfig.LoadConfig("config.json")
+	var config *jconfig.Config
+	if _, err := os.Stat("config.local.json"); os.IsNotExist(err) {
+		config = jconfig.LoadConfig("config.json")
+	} else {
+		config = jconfig.LoadConfig("config.local.json")
+	}
 
 	mc := handlers.NewMailController(getSession(config.GetString("mongodb")))
 	middleware := middleware.Middleware{}
 	commonHandlers := alice.New(context.ClearHandler)
 
-    if config.GetBool("debug") {
-        commonHandlers = commonHandlers.Append(middleware.LoggingHandler)
-    }
+	if config.GetBool("debug") {
+		commonHandlers = commonHandlers.Append(middleware.LoggingHandler)
+	}
 
-    commonHandlers = commonHandlers.Append(middleware.RecoverHandler,
-                                            middleware.AcceptHandler)
+	commonHandlers = commonHandlers.Append(
+		middleware.RecoverHandler,
+		middleware.AcceptHandler)
 
 	router := router.NewRouter()
 	router.Get("/mails", commonHandlers.ThenFunc(mc.ListMail))
-	router.Post("/mails", commonHandlers.Append(middleware.ContentTypeHandler, middleware.BodyHandler(models.MailResource{})).ThenFunc(mc.CreateMail))
+	router.Post("/mails", commonHandlers.Append(middleware.ContentTypeHandler,
+		middleware.BodyHandler(models.Mail{})).ThenFunc(mc.CreateMail))
 
-	router.Put("/mail/:id", commonHandlers.Append(middleware.ContentTypeHandler, middleware.BodyHandler(models.MailResource{})).ThenFunc(mc.UpdateMail))
-	router.Get("/mail/:id", commonHandlers.ThenFunc(mc.RetrieveMail))
-	router.Delete("/mail/:id", commonHandlers.ThenFunc(mc.DeleteMail))
-	router.Router.ServeFiles("/static/*filepath", http.Dir("static"))
+	router.Put("/mails/:id", commonHandlers.Append(middleware.ContentTypeHandler,
+		middleware.BodyHandler(models.Mail{})).ThenFunc(mc.UpdateMail))
+	router.Get("/mails/:id", commonHandlers.ThenFunc(mc.RetrieveMail))
+	router.Delete("/mails/:id", commonHandlers.ThenFunc(mc.DeleteMail))
+	router.Router.NotFound = http.FileServer(http.Dir(config.GetString("servePath"))).ServeHTTP
 
-    http.ListenAndServe(config.GetString("host"), router)
+	http.ListenAndServe(config.GetString("host"), router)
 }
 
 // Get mongodb session

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -24,15 +25,15 @@ type Error struct {
 }
 
 func WriteError(w http.ResponseWriter, err *Error) {
-	w.Header().Set("Content-Type", "application/vnd.api+json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(err.Status)
 	json.NewEncoder(w).Encode(Errors{[]*Error{err}})
 }
 
 var (
 	ErrBadRequest           = &Error{"bad_request", 400, "Bad request", "Request body is not well-formed. It must be JSON."}
-	ErrNotAcceptable        = &Error{"not_acceptable", 406, "Not Acceptable", "Accept header must be set to 'application/vnd.api+json'."}
-	ErrUnsupportedMediaType = &Error{"unsupported_media_type", 415, "Unsupported Media Type", "Content-Type header must be set to: 'application/vnd.api+json'."}
+	ErrNotAcceptable        = &Error{"not_acceptable", 406, "Not Acceptable", "Accept header must be set to 'application/json'."}
+	ErrUnsupportedMediaType = &Error{"unsupported_media_type", 415, "Unsupported Media Type", "Content-Type header must be set to: 'application/json'."}
 	ErrInternalServer       = &Error{"internal_server_error", 500, "Internal Server Error", "Something went wrong."}
 )
 
@@ -71,7 +72,7 @@ func (m Middleware) RecoverHandler(next http.Handler) http.Handler {
 
 func (m Middleware) AcceptHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Accept") != "application/vnd.api+json" {
+		if strings.Index(r.Header.Get("Accept"), "application/json") == -1 {
 			WriteError(w, ErrNotAcceptable)
 			return
 		}
@@ -84,7 +85,7 @@ func (m Middleware) AcceptHandler(next http.Handler) http.Handler {
 
 func (m Middleware) ContentTypeHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Content-Type") != "application/vnd.api+json" {
+		if r.Header.Get("Content-Type") != "application/json" {
 			WriteError(w, ErrUnsupportedMediaType)
 			return
 		}
